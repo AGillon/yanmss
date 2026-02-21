@@ -157,6 +157,59 @@ configure_finder() {
 
 configure_finder
 
+# Security hardening: enable critical protections that are off by default in macOS.
+#
+# Root vs. user policy:
+#   - FileVault, firewall, login window: require sudo (system-level)
+#   - Screensaver password, AirDrop, auto-update checks: user-level defaults
+#
+# NOTE: FileVault is deferred to next login so the script isn't interrupted
+# by an interactive password prompt. The recovery key will be displayed at
+# that point — save it somewhere safe (e.g. Bitwarden).
+configure_security() {
+  echo "[$(date)] Configuring security settings..."
+
+  # FileVault — full-disk encryption. Deferred to next login.
+  if fdesetup status | grep -q "FileVault is Off"; then
+    echo "[$(date)] Scheduling FileVault to enable at next login..."
+    sudo fdesetup enable -defer /var/db/fvdefer 2>/dev/null || \
+      echo "[$(date)] WARNING: FileVault deferral not supported on this version — enable manually in System Settings → Privacy & Security."
+  else
+    echo "[$(date)] FileVault already enabled."
+  fi
+
+  # Application firewall — blocks unsolicited inbound connections.
+  # The built-in firewall is off by default; this turns it on.
+  echo "[$(date)] Enabling application firewall..."
+  sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+
+  # Screensaver — require password immediately on wake/lock.
+  echo "[$(date)] Configuring screensaver password lock..."
+  defaults write com.apple.screensaver askForPassword -int 1
+  defaults write com.apple.screensaver askForPasswordDelay -int 0
+
+  # Auto-login — disable so a password is required at boot.
+  echo "[$(date)] Disabling automatic login..."
+  sudo defaults delete /Library/Preferences/com.apple.loginwindow autoLoginUser 2>/dev/null || true
+
+  # Automatic updates — enable all categories, including security patches.
+  echo "[$(date)] Enabling automatic software updates..."
+  defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+  defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
+  defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
+  defaults write com.apple.SoftwareUpdate ConfigDataInstall -bool true
+  sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticallyInstallMacOSUpdates -bool true
+
+  # AirDrop — restrict discoverability to contacts only (default is "Everyone").
+  echo "[$(date)] Setting AirDrop to Contacts Only..."
+  defaults write com.apple.sharingd DiscoverableMode -string "Contacts Only"
+  killall sharingd 2>/dev/null || true
+
+  echo "[$(date)] Security settings configured."
+}
+
+configure_security
+
 # Remove unused stock Apple apps that will never be used.
 # NOTE: macOS may re-download these after an OS update — this is a known
 # limitation without MDM tooling. Do NOT add system-integrated apps (Safari,
@@ -434,13 +487,47 @@ install_dev_tools() {
 
 install_dev_tools
 
+# Security tools: fills gaps that macOS's built-in protections don't cover.
+#
+#   Lulu            — outbound application firewall. macOS blocks unsolicited
+#                     inbound connections but applies no policy to egress traffic.
+#                     Lulu alerts you when an app tries to phone home.
+#   BlockBlock      — monitors for persistent background components (launch agents,
+#                     cron jobs, login items). Alerts you when something tries to
+#                     survive a reboot.
+#   Suspicious Pkg  — Quick Look extension so you can inspect a .pkg installer
+#                     before running it.
+#   Malwarebytes    — on-demand macOS malware scanner. Free tier is sufficient.
+#   NextDNS         — DNS-level ad, tracker, and malware blocking across all apps.
+#                     Requires account setup and a profile ID — see manual-setup.md.
+#
+# NOTE: Lulu and BlockBlock will request system permissions (Full Disk Access,
+# Notifications) on first launch. Approve them for these tools to be effective.
+install_security_tools() {
+  echo "[$(date)] Installing security tools..."
+
+  brew install --cask --appdir="/Applications" lulu
+  brew install --cask --appdir="/Applications" blockblock
+  brew install --cask --appdir="/Applications" suspicious-package
+  brew install --cask --appdir="/Applications" malwarebytes
+
+  # NextDNS CLI — installs the local DNS proxy. Configuration (account + profile ID)
+  # must be completed manually; see manual-setup.md.
+  brew install nextdns/tap/nextdns
+
+  echo "[$(date)] Security tools installation complete."
+  echo "[$(date)] See manual-setup.md for post-install configuration steps."
+}
+
+install_security_tools
+
 # Core Applications Installation: Install essential applications using Homebrew.
 # Note: visual-studio-code is installed in install_dev_tools() to avoid duplication.
 install_core_apps() {
   echo "[$(date)] Installing core applications..."
   brew install --cask --appdir="/Applications" alfred &
   brew install --cask --appdir="/Applications" slack &
-  brew install --cask --appdir="/Applications" 1password &
+  brew install --cask --appdir="/Applications" bitwarden &
   wait
 }
 
