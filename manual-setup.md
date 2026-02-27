@@ -130,24 +130,22 @@ The script installs both the Bitwarden desktop app (`bitwarden`) and the CLI (`b
 
 ## 3. Terminal and Shell
 
-### Powerlevel10k — Theme Configuration
+### Starship — Prompt Customization
 
-**When:** First time you open a new terminal session after the script.
+**When:** After the script completes (optional — Starship works out of the box).
 
-The script sets `ZSH_THEME="powerlevel10k/powerlevel10k"` in `.zshrc`. On first launch, p10k's configuration wizard starts automatically.
+The script installs Starship and adds `eval "$(starship init zsh)"` to `.zshrc`. The prompt works immediately with sensible defaults.
 
-**Steps:**
-1. Open iTerm2
-2. Follow the `p10k configure` wizard — it guides you through font, style, and layout options
-3. For Catppuccin Macchiato colors to render correctly, complete the iTerm2 color scheme import first (see below)
-
-**To re-run the wizard at any time:** `p10k configure`
+**To customize:**
+1. Create or edit `~/.config/starship.toml`
+2. See the full configuration reference at [starship.rs/config](https://starship.rs/config/)
+3. Changes take effect on the next prompt (no shell restart needed)
 
 ---
 
 ### iTerm2 — Catppuccin Macchiato Color Scheme
 
-**When:** Before running `p10k configure`.
+**When:** Before first use of the terminal.
 
 The script downloads the color scheme to `~/.iterm2/catppuccin-macchiato.itermcolors` but cannot import it — iTerm2 requires a GUI interaction.
 
@@ -160,13 +158,13 @@ The script downloads the color scheme to `~/.iterm2/catppuccin-macchiato.itermco
 
 ---
 
-### iTerm2 — Powerline Font
+### iTerm2 — Nerd Font
 
 **When:** Same session as color scheme import.
 
 **Steps:**
 1. `⌘,` → Profiles → Text tab
-2. Click **Font** → search for **Meslo LG M for Powerline** (installed by the script)
+2. Click **Font** → search for **MesloLGS Nerd Font** (installed by the script)
 3. Set size to 13 or 14
 
 ---
@@ -286,8 +284,8 @@ By default iCloud syncs Desktop, Documents, and much more. For mixed personal/pr
 | Review app permissions in System Settings | ☐ |
 | Log in to Bitwarden, enable 2FA | ☐ |
 | Import Catppuccin Macchiato into iTerm2 | ☐ |
-| Set Powerline font in iTerm2 | ☐ |
-| Run `p10k configure` | ☐ |
+| Set Nerd Font in iTerm2 | ☐ |
+| Customize Starship prompt (optional) | ☐ |
 | Activate Catppuccin Macchiato in VSCode | ☐ |
 | Install Catppuccin Macchiato in Firefox | ☐ |
 | Set up Firefox work and personal profiles | ☐ |

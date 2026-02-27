@@ -10,7 +10,7 @@ YANMSS is a comprehensive setup script for automating the configuration of a new
 - **Processor Compatibility Check**: Automatically detects M1/M2/M3 and Intel processors, adjusting installations as needed.
 - **Homebrew Installation and Updates**: Installs and updates Homebrew, a package manager for macOS, with retry logic to handle network-related failures.
 - **Finder Configuration**: Customizes Finder settings, such as showing hidden files, displaying the Library folder, and enabling useful Finder options.
-- **Terminal Enhancements**: Installs iTerm2 and Oh My Zsh with the agnoster theme, plus popular plugins including zsh-autosuggestions, zsh-syntax-highlighting, and more for an enhanced terminal experience.
+- **Terminal Enhancements**: Installs iTerm2, Oh My Zsh, and the Starship prompt, plus popular plugins including zsh-autosuggestions, zsh-syntax-highlighting, and more for an enhanced terminal experience.
 - **Command-Line Tools**: Installs powerful CLI tools including:
   - `z` - Smart directory jumping (replaces cd)
   - `bat` - Better cat with syntax highlighting
@@ -19,7 +19,7 @@ YANMSS is a comprehensive setup script for automating the configuration of a new
   - `ripgrep`, `fd` - Fast search tools
   - `jq` - JSON processor
   - `htop` - Interactive process viewer
-- **Powerline Fonts**: Adds Powerline fonts for enhanced terminal aesthetics with agnoster theme support.
+- **Nerd Fonts**: Installs Meslo Nerd Font for enhanced terminal aesthetics and Starship prompt icons.
 - **Python and pip**: Installs the latest version of Python and pip, ensuring your development environment is ready.
 - **Essential Applications**: Installs core applications like Alfred, Visual Studio Code, Slack, and 1Password for a productivity-boosting setup.
 - **Logging**: Logs all actions to a timestamped log file for easy troubleshooting.
@@ -45,7 +45,7 @@ After running the installation command, the script will request administrator ac
 
 After the script completes, you'll need to:
 
-1. **Configure iTerm2 Font**: Open iTerm2 Preferences (⌘,) → Profiles → Text → Change Font and select a Powerline font (e.g., "Meslo LG M for Powerline")
+1. **Configure iTerm2 Font**: Open iTerm2 Preferences (⌘,) → Profiles → Text → Change Font and select **MesloLGS Nerd Font**
 2. **Restart your terminal** or run `source ~/.zshrc` to apply the new shell configuration
 3. **Enjoy** your fully configured development environment!
 
