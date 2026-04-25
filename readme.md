@@ -39,6 +39,7 @@ Every third-party component the script puts on the machine. In install order.
 | grep | CLI | `brew` | GNU grep (replaces BSD grep). |
 | uv | CLI | `brew` | Fast Python package/dependency manager. |
 | snowflake-cli | CLI | `brew` | Snowflake command-line client. |
+| shellcheck | CLI | `brew` | Static analysis for shell scripts; used to lint `setup.sh` itself. |
 | iterm2 | Terminal | `brew --cask` | Terminal emulator. |
 | Oh My Zsh | Shell framework | `curl \| sh` | zsh plugin/theme framework. |
 | zsh-autosuggestions | Shell plugin | `git clone` | Inline command suggestions from history. |

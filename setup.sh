@@ -159,6 +159,7 @@ install_cli_tools() {
   brew install grep     # GNU grep (replaces BSD grep)
   brew install uv       # Fast Python package manager
   brew install snowflake-cli  # Snowflake CLI
+  brew install shellcheck     # Shell script static analysis
 }
 
 install_cli_tools
