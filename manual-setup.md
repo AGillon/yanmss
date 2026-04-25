@@ -258,7 +258,22 @@ terraform --version # confirm it's active
 
 ---
 
-## 6. iCloud — Review What's Synced
+## 6. Display
+
+### Display Scaling — Adjust Text Size
+
+**When:** After the script completes, before extended use.
+
+macOS display scaling depends on the specific display hardware and cannot be reliably automated.
+
+**Steps:**
+1. System Settings → Displays
+2. Select your preferred text size (e.g. "More Space" for smaller text / more screen real estate)
+3. If using an external monitor, configure each display separately
+
+---
+
+## 7. iCloud — Review What's Synced
 
 **When:** Within the first day.
 
@@ -292,4 +307,5 @@ By default iCloud syncs Desktop, Documents, and much more. For mixed personal/pr
 | Set default Python version with pyenv | ☐ |
 | Sign in to Tailscale | ☐ |
 | Verify Terraform via `tfenv list` | ☐ |
+| Adjust display scaling (System Settings → Displays) | ☐ |
 | Review iCloud sync settings | ☐ |
