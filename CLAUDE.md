@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A single-shot Mac bootstrap: one Bash script (`setup.sh`) that takes a fresh macOS install to a working dev environment, plus `manual-setup.md` for the steps that genuinely cannot be scripted (FileVault key capture, GUI-only theme imports, account sign-ins).
 
-Originally forked from `mikeprivette/yanmss`. This fork has diverged substantially — added security hardening, security tools, swapped 1Password → Bitwarden, added Starship, pyenv/tfenv, Catppuccin theming, and extensive idempotence work. Do not assume upstream parity.
+Originally forked from `mikeprivette/yanmss`. This fork has diverged substantially — added security hardening, security tools, swapped 1Password → Bitwarden, added Starship, pyenv/tfenv, and extensive idempotence work. Do not assume upstream parity.
 
 ## Running and testing
 
@@ -29,7 +29,7 @@ Logs land in `~/mac_setup_<timestamp>.log` (every run, via `tee`). When debuggin
 1. **Bootstrap header** (lines 1–17): re-execs under `bash` if invoked via `sh`, then `set -euo pipefail`.
 2. **Logging wrapper**: the entire body is wrapped in `{ ... } 2>&1 | tee -a "$LOGFILE"` (lines 23 / 620). Anything outside that block won't appear in the log.
 3. **Helpers**: `keep_sudo_active`, `retry`, `brew_cask_install`, `backup_file`. Defined inline before first use — order matters because of `set -e`.
-4. **Install functions**: each major area (`install_homebrew`, `install_cli_tools`, `configure_security`, `install_terminal_tools`, `install_catppuccin`, `install_dev_tools`, `install_security_tools`, `install_core_apps`, etc.) is a function defined and immediately invoked. Adding a new area means: define a function, invoke it, document any manual follow-up in `manual-setup.md`.
+4. **Install functions**: each major area (`install_homebrew`, `install_cli_tools`, `configure_security`, `install_terminal_tools`, `install_prompt_and_font`, `install_dev_tools`, `install_security_tools`, `install_core_apps`, etc.) is a function defined and immediately invoked. Adding a new area means: define a function, invoke it, document any manual follow-up in `manual-setup.md`.
 
 ### Idempotence is mandatory
 
@@ -49,11 +49,7 @@ Documented inline at lines 27–36. The script runs as the user; `sudo` is reque
 
 ### `setup.sh` ↔ `manual-setup.md` contract
 
-If a step requires GUI interaction, account credentials, a recovery key the user must capture, or otherwise can't be scripted safely, it goes in `manual-setup.md` with a `**When:**` marker and explicit steps. Inside `setup.sh`, leave a comment pointing at the manual step (see the Catppuccin and security tool blocks for examples). The summary checklist at the bottom of `manual-setup.md` mirrors the section list — keep them in sync.
-
-### Theme: Catppuccin Macchiato
-
-Applied wherever scriptable in `install_catppuccin` (bat theme + cache rebuild, VSCode extensions, iTerm2 color file download, Starship/Nerd Font install). Actual *activation* in iTerm2, VSCode, and Firefox is manual — see `manual-setup.md` §3–4.
+If a step requires GUI interaction, account credentials, a recovery key the user must capture, or otherwise can't be scripted safely, it goes in `manual-setup.md` with a `**When:**` marker and explicit steps. Inside `setup.sh`, leave a comment pointing at the manual step (see the security tool blocks and the Nerd Font note in `install_prompt_and_font` for examples). The summary checklist at the bottom of `manual-setup.md` mirrors the section list — keep them in sync.
 
 ## Conventions
 

@@ -4,7 +4,7 @@
 
 YANMSS is a single-shot Bash script that takes a fresh macOS install to a working development environment: a Homebrew-based toolchain, a themed terminal, security hardening, and the apps you actually use. It is opinionated — meant to be read top-to-bottom and re-run safely.
 
-This repo is a fork of [`mikeprivette/yanmss`](https://github.com/mikeprivette/yanmss) and has diverged substantially: 1Password was swapped for Bitwarden, security hardening and security tools were added, Catppuccin Macchiato theming was added across bat/VSCode/iTerm2, and pyenv/tfenv/Go/Rust/Claude Code were added to the dev toolchain.
+This repo is a fork of [`mikeprivette/yanmss`](https://github.com/mikeprivette/yanmss) and has diverged substantially: 1Password was swapped for Bitwarden, security hardening and security tools were added, Starship prompt and a Nerd Font were added, and pyenv/tfenv/Go/Rust/Claude Code were added to the dev toolchain.
 
 ## What it does
 
@@ -16,7 +16,7 @@ Beyond the installs in the table below, the script:
 - Wraps network commands in a 5-attempt retry helper.
 - Hardens macOS via `defaults`, `fdesetup`, and `socketfilterfw`: schedules FileVault for next login, enables the application firewall, requires a password immediately on screen lock, enables automatic security updates, scopes AirDrop to Contacts Only, and removes a curated list of unused stock Apple apps (GarageBand, iMovie, Keynote, Numbers, Pages, Chess, Stocks).
 - Configures iTerm2's Natural Text Editing key map (Option+Arrow word jump, Cmd+Arrow line jump, Option+Backspace word delete, etc.) by writing directly to its plist.
-- Writes a curated `.zshrc` (Oh My Zsh + plugins, aliases, pyenv init, Starship init, Catppuccin bat theme).
+- Writes a curated `.zshrc` (Oh My Zsh + plugins, aliases, pyenv init, Starship init).
 
 ## What gets installed
 
@@ -45,10 +45,6 @@ Every third-party component the script puts on the machine. In install order.
 | zsh-syntax-highlighting | Shell plugin | `git clone` | Live syntax highlighting in the prompt. |
 | starship | Shell prompt | `brew` | Cross-shell prompt; configured via `~/.config/starship.toml`. |
 | font-meslo-lg-nerd-font | Font | `brew --cask` | Meslo Nerd Font — glyphs/icons for Starship and the terminal. |
-| Catppuccin bat theme | Theme | `curl` (download) | Macchiato `.tmTheme` dropped into bat's themes dir + cache rebuild. |
-| Catppuccin.catppuccin-vsc | Theme (VSCode) | `code --install-extension` | Catppuccin Macchiato color theme for VSCode (activate manually). |
-| Catppuccin.catppuccin-vsc-icons | Theme (VSCode) | `code --install-extension` | Catppuccin file icon theme for VSCode (activate manually). |
-| Catppuccin iTerm2 colors | Theme | `curl` (download) | `.itermcolors` placed in `~/.iterm2/`; import manually via iTerm2 prefs. |
 | pyenv | Version manager | `brew` | Python version manager. The script does **not** install a Python — pick one with `pyenv install`. |
 | tfenv | Version manager | `brew` | Terraform version manager. |
 | Terraform (latest) | Language tool | `tfenv` | Latest Terraform installed and selected via `tfenv install latest`. |
@@ -89,7 +85,7 @@ The script requests `sudo` once at the start and keeps it alive for the duration
 
 ## Post-installation
 
-The script does everything it safely can without human input. The remaining steps — capturing the FileVault recovery key, enabling Find My Mac, approving Lulu/BlockBlock permissions, configuring NextDNS with your profile ID, importing the Catppuccin color scheme into iTerm2, activating the theme in VSCode, picking a Python version with `pyenv install`, signing in to Tailscale and Bitwarden — are documented step-by-step in **[`manual-setup.md`](./manual-setup.md)**, with a checklist at the end.
+The script does everything it safely can without human input. The remaining steps — capturing the FileVault recovery key, enabling Find My Mac, approving Lulu/BlockBlock permissions, configuring NextDNS with your profile ID, setting the Nerd Font in iTerm2, picking a Python version with `pyenv install`, signing in to Tailscale and Bitwarden — are documented step-by-step in **[`manual-setup.md`](./manual-setup.md)**, with a checklist at the end.
 
 ## New commands available
 
