@@ -129,10 +129,9 @@ update_homebrew() {
 update_homebrew
 
 # Install coreutils for gdate and bc for calculations.
-# node is required here so npm is available for Claude Code installation later.
 install_prerequisites() {
   echo "[$(date)] Installing prerequisites..."
-  brew install coreutils bc node
+  brew install coreutils bc
 }
 
 install_prerequisites
@@ -157,6 +156,10 @@ install_cli_tools() {
   brew install ripgrep  # Fast grep alternative
   brew install fd       # Fast find alternative
   brew install htop     # Better top
+  brew install grep     # GNU grep (replaces BSD grep)
+  brew install uv       # Fast Python package manager
+  brew install snowflake-cli  # Snowflake CLI
+  brew install shellcheck     # Shell script static analysis
 }
 
 install_cli_tools
@@ -268,7 +271,38 @@ backup_file() {
 install_terminal_tools() {
   echo "[$(date)] Installing iTerm2..."
   brew_cask_install iterm2
-  
+
+  # iTerm2: Enable Natural Text Editing key mappings.
+  # Maps Option+Arrow to word jump, Cmd+Arrow to line jump,
+  # Option+Backspace to delete word, etc.
+  echo "[$(date)] Configuring iTerm2 Natural Text Editing..."
+  local iterm_plist="$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+  # Launch iTerm2 briefly to generate default preferences if needed
+  if [ ! -f "$iterm_plist" ]; then
+    open -a iTerm && sleep 3 && osascript -e 'tell application "iTerm" to quit'
+    sleep 1
+  fi
+  local pb="/usr/libexec/PlistBuddy"
+  local km=":New Bookmarks:0:Keyboard Map"
+  # Helper: add or overwrite a key mapping entry
+  _iterm_key() {
+    local key="$1" action="$2" text="$3"
+    $pb -c "Add '$km:$key' dict" "$iterm_plist" 2>/dev/null || true
+    $pb -c "Delete '$km:$key:Action'" "$iterm_plist" 2>/dev/null || true
+    $pb -c "Add    '$km:$key:Action' integer $action" "$iterm_plist"
+    $pb -c "Delete '$km:$key:Text'" "$iterm_plist" 2>/dev/null || true
+    $pb -c "Add    '$km:$key:Text' string '$text'" "$iterm_plist"
+  }
+  _iterm_key "0xf702-0x280000" 10 "b"         # Option+Left  → word backward
+  _iterm_key "0xf703-0x280000" 10 "f"         # Option+Right → word forward
+  _iterm_key "0xf702-0x300000" 11 "0x1"       # Cmd+Left    → beginning of line
+  _iterm_key "0xf703-0x300000" 11 "0x5"       # Cmd+Right   → end of line
+  _iterm_key "0x7f-0x80000"    11 "0x1b 0x7f" # Option+Bksp  → delete word backward
+  _iterm_key "0x7f-0x100000"   11 "0x15"      # Cmd+Bksp     → delete line backward
+  _iterm_key "0xf728-0x80000"  10 "d"         # Option+Del   → delete word forward
+  _iterm_key "0xf728-0x0"      11 "0x4"       # Del          → delete char forward
+  echo "[$(date)] iTerm2 Natural Text Editing configured."
+
   echo "[$(date)] Installing oh-my-zsh..."
   # Check if Oh My Zsh is already installed
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
@@ -361,6 +395,12 @@ alias ocat="/bin/cat"     # Original cat if needed
 # Set PATH for Homebrew
 export PATH="/opt/homebrew/bin:$PATH"
 
+# Go
+export PATH="/usr/local/go/bin:$PATH"
+
+# Rust/Cargo
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
 # Initialize z for smart directory jumping
 if command -v brew >/dev/null 2>&1; then
   # Load z installed via Homebrew
@@ -368,9 +408,6 @@ if command -v brew >/dev/null 2>&1; then
     source "$(brew --prefix)/etc/profile.d/z.sh"
   fi
 fi
-
-# Bat configuration — Catppuccin Macchiato theme (installed by install_catppuccin)
-export BAT_THEME="Catppuccin Macchiato"
 
 # pyenv — Python version manager
 export PYENV_ROOT="$HOME/.pyenv"
@@ -388,53 +425,20 @@ ZSHRC_CONFIG
 
 install_terminal_tools
 
-# Catppuccin Macchiato theme — applies wherever scriptable.
-# Items requiring a manual step after the script runs:
-#   iTerm2  : Preferences > Profiles > Colors > Color Presets > Import
-#             select ~/.iterm2/catppuccin-macchiato.itermcolors
-#   VSCode  : Cmd+Shift+P > Color Theme > Catppuccin Macchiato
-#   Firefox : Install from https://addons.mozilla.org/en-US/firefox/addon/catppuccin-macchiato/
-#   Starship: Customize via ~/.config/starship.toml
-install_catppuccin() {
-  echo "[$(date)] Installing Catppuccin Macchiato theme..."
-
-  # bat — download theme file and rebuild cache
-  if command -v bat >/dev/null 2>&1; then
-    echo "[$(date)] Configuring Catppuccin Macchiato for bat..."
-    mkdir -p "$(bat --config-dir)/themes"
-    curl -fsSL \
-      "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Macchiato.tmTheme" \
-      -o "$(bat --config-dir)/themes/Catppuccin Macchiato.tmTheme"
-    bat cache --build
-  fi
-
-  # VSCode — install theme and icon pack extensions
-  if command -v code >/dev/null 2>&1; then
-    echo "[$(date)] Installing Catppuccin VSCode extensions..."
-    code --install-extension Catppuccin.catppuccin-vsc
-    code --install-extension Catppuccin.catppuccin-vsc-icons
-  fi
-
-  # iTerm2 — download color scheme so it's ready to import manually
-  echo "[$(date)] Downloading Catppuccin Macchiato iTerm2 color scheme..."
-  mkdir -p "$HOME/.iterm2"
-  curl -fsSL \
-    "https://raw.githubusercontent.com/catppuccin/iterm/main/colors/catppuccin-macchiato.itermcolors" \
-    -o "$HOME/.iterm2/catppuccin-macchiato.itermcolors"
-
-  # Starship prompt — cross-shell, fast, actively maintained
+# Starship prompt + Meslo Nerd Font.
+# The .zshrc generated by install_terminal_tools ends with `eval "$(starship init zsh)"`,
+# so starship must be on PATH before that file is sourced. Nerd Font is the glyph
+# source Starship's default preset assumes; activating it in iTerm2 is manual
+# (see manual-setup.md).
+install_prompt_and_font() {
   echo "[$(date)] Installing Starship prompt..."
   brew install starship
 
-  # Nerd Font — provides icons and glyphs used by Starship
   echo "[$(date)] Installing Meslo Nerd Font..."
   brew_cask_install font-meslo-lg-nerd-font
-
-  echo "[$(date)] Catppuccin Macchiato theme installation complete."
-  echo "[$(date)] Manual steps required — see post-script checklist in readme.md."
 }
 
-install_catppuccin
+install_prompt_and_font
 
 
 # Python version management via pyenv.
@@ -460,9 +464,11 @@ install_python
 #   awscli — official AWS CLI Homebrew formula
 #   glab   — official GitLab CLI Homebrew formula
 #   bitwarden-cli — official Homebrew formula
-#   docker — Homebrew cask installs Docker Desktop (VM-based, covers most use cases)
-#   firefox, tailscale, visual-studio-code — standard Homebrew casks
-#   claude-code — npm-only; not available on Homebrew
+#   go     — official Go Homebrew formula
+#   docker-desktop — Homebrew cask installs Docker Desktop (VM-based)
+#   firefox, tailscale-app, visual-studio-code — standard Homebrew casks
+#   claude-code — native install via claude.ai/install.sh
+#   rust   — installed via rustup (official installer)
 install_dev_tools() {
   echo "[$(date)] Installing developer tools and additional apps..."
 
@@ -476,6 +482,20 @@ install_dev_tools() {
   tfenv install latest
   tfenv use latest
 
+  # Go
+  echo "[$(date)] Installing Go..."
+  brew install go
+
+  # Rust via rustup (official installer, non-interactive)
+  echo "[$(date)] Installing Rust via rustup..."
+  if ! command -v rustup >/dev/null 2>&1; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # Source cargo env so rust tools are available for the rest of this script
+    source "$HOME/.cargo/env"
+  else
+    echo "[$(date)] Rust already installed: $(rustc --version)"
+  fi
+
   # CLI tools
   echo "[$(date)] Installing CLI tools..."
   brew install gh
@@ -483,16 +503,21 @@ install_dev_tools() {
   brew install glab
   brew install bitwarden-cli
 
-  # Claude Code (npm-only — not available on Homebrew)
-  echo "[$(date)] Installing Claude Code via npm..."
-  npm install -g @anthropic-ai/claude-code
+  # Claude Code (native install)
+  echo "[$(date)] Installing Claude Code..."
+  if ! command -v claude >/dev/null 2>&1; then
+    curl -fsSL https://claude.ai/install.sh | sh
+  else
+    echo "[$(date)] Claude Code already installed: $(claude --version 2>/dev/null)"
+  fi
 
   # Cask applications
   echo "[$(date)] Installing cask applications..."
   brew_cask_install visual-studio-code
-  brew_cask_install docker
+  brew_cask_install docker-desktop
   brew_cask_install firefox
-  brew_cask_install tailscale
+  brew_cask_install tailscale-app
+  brew_cask_install basictex
 
   echo "[$(date)] Developer tools installation complete."
 }
@@ -540,6 +565,8 @@ install_core_apps() {
   brew_cask_install alfred
   brew_cask_install slack
   brew_cask_install bitwarden
+  brew_cask_install obsidian
+  brew_cask_install whatsapp
 }
 
 install_core_apps

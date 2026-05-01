@@ -143,21 +143,6 @@ The script installs Starship and adds `eval "$(starship init zsh)"` to `.zshrc`.
 
 ---
 
-### iTerm2 — Catppuccin Macchiato Color Scheme
-
-**When:** Before first use of the terminal.
-
-The script downloads the color scheme to `~/.iterm2/catppuccin-macchiato.itermcolors` but cannot import it — iTerm2 requires a GUI interaction.
-
-**Steps:**
-1. Open iTerm2
-2. `⌘,` → Profiles → Colors tab
-3. Click **Color Presets...** dropdown → **Import...**
-4. Navigate to `~/.iterm2/catppuccin-macchiato.itermcolors` and select it
-5. Click **Color Presets...** again → select **Catppuccin Macchiato**
-
----
-
 ### iTerm2 — Nerd Font
 
 **When:** Same session as color scheme import.
@@ -169,32 +154,7 @@ The script downloads the color scheme to `~/.iterm2/catppuccin-macchiato.itermco
 
 ---
 
-## 4. Editors and Browsers
-
-### VSCode — Activate Catppuccin Macchiato Theme
-
-**When:** First time you open VSCode.
-
-The script installs the extension but cannot set it as the active theme.
-
-**Steps:**
-1. Open VSCode
-2. `⌘+Shift+P` → type **Color Theme** → select **Preferences: Color Theme**
-3. Choose **Catppuccin Macchiato**
-4. For icons: `⌘+Shift+P` → **File Icon Theme** → **Catppuccin Macchiato**
-
----
-
-### Firefox — Catppuccin Macchiato Theme
-
-**When:** First time you open Firefox. Not scriptable — Firefox add-ons require browser interaction.
-
-**Steps:**
-1. Open Firefox
-2. Visit [addons.mozilla.org/en-US/firefox/addon/catppuccin-macchiato](https://addons.mozilla.org/en-US/firefox/addon/catppuccin-macchiato/)
-3. Click **Add to Firefox**
-
----
+## 4. Browsers
 
 ### Firefox — Separate Work and Personal Profiles
 
@@ -258,7 +218,22 @@ terraform --version # confirm it's active
 
 ---
 
-## 6. iCloud — Review What's Synced
+## 6. Display
+
+### Display Scaling — Adjust Text Size
+
+**When:** After the script completes, before extended use.
+
+macOS display scaling depends on the specific display hardware and cannot be reliably automated.
+
+**Steps:**
+1. System Settings → Displays
+2. Select your preferred text size (e.g. "More Space" for smaller text / more screen real estate)
+3. If using an external monitor, configure each display separately
+
+---
+
+## 7. iCloud — Review What's Synced
 
 **When:** Within the first day.
 
@@ -283,13 +258,11 @@ By default iCloud syncs Desktop, Documents, and much more. For mixed personal/pr
 | Configure NextDNS with profile ID | ☐ |
 | Review app permissions in System Settings | ☐ |
 | Log in to Bitwarden, enable 2FA | ☐ |
-| Import Catppuccin Macchiato into iTerm2 | ☐ |
 | Set Nerd Font in iTerm2 | ☐ |
 | Customize Starship prompt (optional) | ☐ |
-| Activate Catppuccin Macchiato in VSCode | ☐ |
-| Install Catppuccin Macchiato in Firefox | ☐ |
 | Set up Firefox work and personal profiles | ☐ |
 | Set default Python version with pyenv | ☐ |
 | Sign in to Tailscale | ☐ |
 | Verify Terraform via `tfenv list` | ☐ |
+| Adjust display scaling (System Settings → Displays) | ☐ |
 | Review iCloud sync settings | ☐ |

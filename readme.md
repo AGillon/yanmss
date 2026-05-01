@@ -2,66 +2,105 @@
 
 ## About
 
-YANMSS is a comprehensive setup script for automating the configuration of a new Mac. It optimizes default system settings, installs essential command-line tools and applications, and performs system checks for processor compatibility, making it ideal for users who want a quick and efficient setup process.
+YANMSS is a single-shot Bash script that takes a fresh macOS install to a working development environment: a Homebrew-based toolchain, a themed terminal, security hardening, and the apps you actually use. It is opinionated — meant to be read top-to-bottom and re-run safely.
 
-### Features
+This repo is a fork of [`mikeprivette/yanmss`](https://github.com/mikeprivette/yanmss) and has diverged substantially: 1Password was swapped for Bitwarden, security hardening and security tools were added, Starship prompt and a Nerd Font were added, and pyenv/tfenv/Go/Rust/Claude Code were added to the dev toolchain.
 
-- **Strict Safety Measures**: Uses strict mode (set -euo pipefail) to ensure safety and reliability throughout the setup process.
-- **Processor Compatibility Check**: Automatically detects M1/M2/M3 and Intel processors, adjusting installations as needed.
-- **Homebrew Installation and Updates**: Installs and updates Homebrew, a package manager for macOS, with retry logic to handle network-related failures.
-- **Finder Configuration**: Customizes Finder settings, such as showing hidden files, displaying the Library folder, and enabling useful Finder options.
-- **Terminal Enhancements**: Installs iTerm2, Oh My Zsh, and the Starship prompt, plus popular plugins including zsh-autosuggestions, zsh-syntax-highlighting, and more for an enhanced terminal experience.
-- **Command-Line Tools**: Installs powerful CLI tools including:
-  - `z` - Smart directory jumping (replaces cd)
-  - `bat` - Better cat with syntax highlighting
-  - `tree` - Directory structure visualization
-  - `tldr` - Simplified man pages
-  - `ripgrep`, `fd` - Fast search tools
-  - `jq` - JSON processor
-  - `htop` - Interactive process viewer
-- **Nerd Fonts**: Installs Meslo Nerd Font for enhanced terminal aesthetics and Starship prompt icons.
-- **Python and pip**: Installs the latest version of Python and pip, ensuring your development environment is ready.
-- **Essential Applications**: Installs core applications like Alfred, Visual Studio Code, Slack, and 1Password for a productivity-boosting setup.
-- **Logging**: Logs all actions to a timestamped log file for easy troubleshooting.
-- **Retry Logic**: Implements retry mechanisms for network-dependent commands to improve reliability.
-- **Backup Configurations**: Backs up important files, such as .zshrc, before making changes to avoid data loss.
-- **Interactive Prompts**: Offers prompts to confirm certain actions, allowing customization during the setup process.
+## What it does
 
-### Installation with Curl
+Beyond the installs in the table below, the script:
 
-To install this script on a new Mac, run the following command in the terminal:
+- Runs under `set -euo pipefail` and re-execs into `bash` if invoked via `sh`.
+- Tees every action to `~/mac_setup_<timestamp>.log` for post-mortem debugging.
+- Re-runnable: every install step is guarded so a second run is a no-op for already-installed components. Dotfiles are backed up before they are rewritten.
+- Wraps network commands in a 5-attempt retry helper.
+- Hardens macOS via `defaults`, `fdesetup`, and `socketfilterfw`: schedules FileVault for next login, enables the application firewall, requires a password immediately on screen lock, enables automatic security updates, scopes AirDrop to Contacts Only, and removes a curated list of unused stock Apple apps (GarageBand, iMovie, Keynote, Numbers, Pages, Chess, Stocks).
+- Configures iTerm2's Natural Text Editing key map (Option+Arrow word jump, Cmd+Arrow line jump, Option+Backspace word delete, etc.) by writing directly to its plist.
+- Writes a curated `.zshrc` (Oh My Zsh + plugins, aliases, pyenv init, Starship init).
+
+## What gets installed
+
+Every third-party component the script puts on the machine. In install order.
+
+| Name | Category | Install method | Purpose |
+|---|---|---|---|
+| Xcode Command Line Tools | Bootstrap | `xcode-select` | Compiler, git, headers — required by Homebrew. |
+| Homebrew | Bootstrap | `curl \| bash` | Package manager underpinning everything below. |
+| coreutils | Prerequisite | `brew` | Provides `gdate` for the zsh exec-time hook. |
+| bc | Prerequisite | `brew` | Floating-point math for the zsh exec-time hook. |
+| z | CLI | `brew` | Smart `cd` — jumps to frequently-used directories. |
+| bat | CLI | `brew` | `cat` with syntax highlighting; aliased over `cat`. |
+| tree | CLI | `brew` | Directory tree visualization. |
+| tldr | CLI | `brew` | Concise command examples in lieu of man pages. |
+| jq | CLI | `brew` | JSON processor. |
+| ripgrep | CLI | `brew` | Fast recursive grep (`rg`). |
+| fd | CLI | `brew` | Fast `find` alternative. |
+| htop | CLI | `brew` | Interactive process viewer. |
+| grep | CLI | `brew` | GNU grep (replaces BSD grep). |
+| uv | CLI | `brew` | Fast Python package/dependency manager. |
+| snowflake-cli | CLI | `brew` | Snowflake command-line client. |
+| shellcheck | CLI | `brew` | Static analysis for shell scripts; used to lint `setup.sh` itself. |
+| iterm2 | Terminal | `brew --cask` | Terminal emulator. |
+| Oh My Zsh | Shell framework | `curl \| sh` | zsh plugin/theme framework. |
+| zsh-autosuggestions | Shell plugin | `git clone` | Inline command suggestions from history. |
+| zsh-syntax-highlighting | Shell plugin | `git clone` | Live syntax highlighting in the prompt. |
+| starship | Shell prompt | `brew` | Cross-shell prompt; configured via `~/.config/starship.toml`. |
+| font-meslo-lg-nerd-font | Font | `brew --cask` | Meslo Nerd Font — glyphs/icons for Starship and the terminal. |
+| pyenv | Version manager | `brew` | Python version manager. The script does **not** install a Python — pick one with `pyenv install`. |
+| tfenv | Version manager | `brew` | Terraform version manager. |
+| Terraform (latest) | Language tool | `tfenv` | Latest Terraform installed and selected via `tfenv install latest`. |
+| go | Language | `brew` | Go toolchain. |
+| Rust toolchain | Language | `curl \| sh` | Installed via `rustup` (rustc, cargo, etc.). |
+| gh | Dev CLI | `brew` | GitHub CLI. |
+| glab | Dev CLI | `brew` | GitLab CLI. |
+| awscli | Dev CLI | `brew` | AWS CLI. |
+| bitwarden-cli | Dev CLI | `brew` | Bitwarden CLI (`bw`). |
+| Claude Code | Dev CLI | `curl \| sh` | Anthropic's CLI agent (`claude`), native install from claude.ai. |
+| visual-studio-code | Editor | `brew --cask` | VSCode. |
+| docker-desktop | Dev tool | `brew --cask` | Docker Desktop (VM-based Docker for macOS). |
+| firefox | Browser | `brew --cask` | Firefox. |
+| tailscale-app | Network | `brew --cask` | Tailscale mesh VPN client (GUI app). |
+| basictex | Dev tool | `brew --cask` | Minimal TeX distribution. |
+| lulu | Security | `brew --cask` | Outbound application firewall (fills macOS's egress gap). |
+| blockblock | Security | `brew --cask` | Persistence monitor — alerts on new launch agents/login items. |
+| suspicious-package | Security | `brew --cask` | Quick Look extension to inspect `.pkg` installers before opening. |
+| malwarebytes | Security | `brew --cask` | On-demand macOS malware scanner. |
+| nextdns | Security | `brew` (third-party tap) | DNS-level ads/trackers/malware blocking; configuration is manual. |
+| alfred | Productivity | `brew --cask` | Spotlight replacement / launcher. |
+| slack | Communication | `brew --cask` | Slack desktop client. |
+| bitwarden | Password manager | `brew --cask` | Bitwarden desktop app. |
+| obsidian | Notes | `brew --cask` | Markdown notes / knowledge base. |
+| whatsapp | Communication | `brew --cask` | WhatsApp desktop client. |
+
+## Installation
 
 ```shell
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/mikeprivette/yanmss/master/setup.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/AGillon/yanmss/master/setup.sh)"
 ```
 
-**Note**: If you do not have [Xcode Command Line Tools](https://developer.apple.com/library/archive/technotes/tn2339/_index.html#//apple_ref/doc/uid/DTS40014588-CH1-WHAT_IS_THE_COMMAND_LINE_TOOLS_PACKAGE_) installed, they will be automatically installed.
+If [Xcode Command Line Tools](https://developer.apple.com/library/archive/technotes/tn2339/_index.html#//apple_ref/doc/uid/DTS40014588-CH1-WHAT_IS_THE_COMMAND_LINE_TOOLS_PACKAGE_) are not present, the script installs them and waits for completion before continuing.
 
-### Usage
+## Usage
 
-After running the installation command, the script will request administrator access (`sudo`). It will then proceed with the setup process, providing updates in the terminal for each step. Logging is performed in real-time, with logs written to a timestamped file in the user's home directory for easy reference. No further interaction is required unless prompted for specific configurations.
+The script requests `sudo` once at the start and keeps it alive for the duration. It then runs end-to-end without further interaction. Progress streams to the terminal and to `~/mac_setup_<timestamp>.log`.
 
-#### Post-Installation
+## Post-installation
 
-After the script completes, you'll need to:
+The script does everything it safely can without human input. The remaining steps — capturing the FileVault recovery key, enabling Find My Mac, approving Lulu/BlockBlock permissions, configuring NextDNS with your profile ID, setting the Nerd Font in iTerm2, picking a Python version with `pyenv install`, signing in to Tailscale and Bitwarden — are documented step-by-step in **[`manual-setup.md`](./manual-setup.md)**, with a checklist at the end.
 
-1. **Configure iTerm2 Font**: Open iTerm2 Preferences (⌘,) → Profiles → Text → Change Font and select **MesloLGS Nerd Font**
-2. **Restart your terminal** or run `source ~/.zshrc` to apply the new shell configuration
-3. **Enjoy** your fully configured development environment!
+## New commands available
 
-#### New Commands Available
+- **`z [directory]`** — jump to frequently-used directories (learns from your `cd` usage).
+- **`cat [file]`** — now `bat` with syntax highlighting; use `ocat` for the original.
+- **`tldr [command]`** — quick command examples.
+- **`tree`** — directory structure as a tree.
+- **`rg`** — ripgrep, fast recursive search.
+- **`fd`** — fast `find` alternative.
 
-- **`z [directory]`** - Jump to frequently used directories (learns from your cd usage)
-  - Example: `z proj` might jump to `/Users/you/projects`
-- **`cat [file]`** - Now uses `bat` with syntax highlighting
-  - Use `ocat` if you need the original cat
-- **`tldr [command]`** - Get quick command examples instead of man pages
-- **`tree`** - View directory structure in tree format
+## Contributions
 
-### Contributions
+Issues and PRs welcome.
 
-Contributions are always welcome! Feel free to fork this repository, submit issues, or open PRs to help improve the script for the community. Any enhancements, fixes, or suggestions are greatly appreciated.
+## Disclaimer
 
-### Disclaimer
-
-Use this script at your own risk. While it has been tested on multiple systems, configurations can vary, and some customization may be required to suit your specific needs.
+Use this script at your own risk. It's been used on multiple machines but configurations vary; review `setup.sh` before running, especially the security and stock-app removal sections.
