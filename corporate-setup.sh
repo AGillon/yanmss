@@ -275,11 +275,15 @@ install_terminal_tools() {
     echo "[$(date)] Installing iTerm2..."
     brew_cask_install iterm2
 
-    # iTerm2: Enable Natural Text Editing key mappings.
-    # Maps Option+Arrow to word jump, Cmd+Arrow to line jump,
-    # Option+Backspace to delete word, etc.
-    echo "[$(date)] Configuring iTerm2 Natural Text Editing..."
+    # iTerm2 preferences: Natural Text Editing keymap + profile/app-level
+    # behavior tuning. Font is intentionally left untouched (user's manual
+    # choice survives). On a corporate device, org MDM configuration profiles
+    # for com.googlecode.iterm2 will override anything we set here.
+    echo "[$(date)] Configuring iTerm2 preferences..."
     local iterm_plist="$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+    # iTerm2 rewrites its plist on quit; preemptively quit so writes survive.
+    osascript -e 'tell application "iTerm" to quit' 2>/dev/null || true
+    sleep 1
     if [ ! -f "$iterm_plist" ]; then
       open -a iTerm && sleep 3 && osascript -e 'tell application "iTerm" to quit'
       sleep 1
@@ -294,6 +298,12 @@ install_terminal_tools() {
       $pb -c "Delete '$km:$key:Text'" "$iterm_plist" 2>/dev/null || true
       $pb -c "Add    '$km:$key:Text' string '$text'" "$iterm_plist"
     }
+    _iterm_profile_set() {
+      local key="$1" type="$2" value="$3"
+      $pb -c "Set ':New Bookmarks:0:$key' $value" "$iterm_plist" 2>/dev/null \
+        || $pb -c "Add ':New Bookmarks:0:$key' $type $value" "$iterm_plist"
+    }
+    # Natural Text Editing keymap.
     _iterm_key "0xf702-0x280000" 10 "b"         # Option+Left  → word backward
     _iterm_key "0xf703-0x280000" 10 "f"         # Option+Right → word forward
     _iterm_key "0xf702-0x300000" 11 "0x1"       # Cmd+Left    → beginning of line
@@ -302,9 +312,24 @@ install_terminal_tools() {
     _iterm_key "0x7f-0x100000"   11 "0x15"      # Cmd+Bksp     → delete line backward
     _iterm_key "0xf728-0x80000"  10 "d"         # Option+Del   → delete word forward
     _iterm_key "0xf728-0x0"      11 "0x4"       # Del          → delete char forward
-    echo "[$(date)] iTerm2 Natural Text Editing configured."
+    # Default profile preferences.
+    _iterm_profile_set "Custom Directory" string  Recycle    # new tab/split reuses prior cwd
+    _iterm_profile_set "Scrollback Lines" integer 10000      # bump from stock 1000
+    _iterm_profile_set "Visual Bell"      bool    true
+    _iterm_profile_set "Flashing Bell"    bool    true
+    # App-level preferences.
+    defaults write com.googlecode.iterm2 ShowFullScreenTabBar -bool true
+    defaults write com.googlecode.iterm2 AppleWindowTabbingMode -string manual
+    defaults write com.googlecode.iterm2 NoSyncIgnoreSystemWindowRestoration -bool true
+    defaults write com.googlecode.iterm2 NoSyncWindowRestoresWorkspaceAtLaunch -bool false
+    defaults write com.googlecode.iterm2 SoundForEsc -bool false
+    defaults write com.googlecode.iterm2 VisualIndicatorForEsc -bool false
+    defaults write com.googlecode.iterm2 HapticFeedbackForEsc -bool false
+    defaults write com.googlecode.iterm2 SUSendProfileInfo -bool false
+    killall cfprefsd 2>/dev/null || true
+    echo "[$(date)] iTerm2 preferences configured."
   else
-    log_skipped "INSTALL_ITERM2" "iTerm2 + Natural Text Editing keymap"
+    log_skipped "INSTALL_ITERM2" "iTerm2 + keymap + preferences"
   fi
 
   echo "[$(date)] Installing oh-my-zsh..."
