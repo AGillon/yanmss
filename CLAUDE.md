@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A single-shot Mac bootstrap: one Bash script (`setup.sh`) that takes a fresh macOS install to a working dev environment, plus `manual-setup.md` for the steps that genuinely cannot be scripted (FileVault key capture, GUI-only theme imports, account sign-ins).
 
+A second script, `corporate-setup.sh`, is a strict subset of `setup.sh` for use on MDM-managed corporate devices. It omits everything that needs sudo (FileVault, firewall, login-window, /Applications stock-app removal) and everything that conflicts with org-managed equivalents (Lulu, BlockBlock, Malwarebytes, NextDNS, Tailscale). Apps commonly MDM-pushed by employers (Slack, Bitwarden, VS Code, Docker Desktop, Firefox, Alfred, etc.) are gated behind a top-of-file `INSTALL_*=false` CONFIG block — edited once per employer. Its companion is `corporate-manual-setup.md`. The two pairs (`setup.sh` ↔ `manual-setup.md` and `corporate-setup.sh` ↔ `corporate-manual-setup.md`) coexist; pick the one that matches the device.
+
 Originally forked from `mikeprivette/yanmss`. This fork has diverged substantially — added security hardening, security tools, swapped 1Password → Bitwarden, added Starship, pyenv/tfenv, and extensive idempotence work. Do not assume upstream parity.
 
 ## Running and testing
@@ -47,9 +49,11 @@ When adding a step that isn't naturally idempotent, add the guard. Don't rely on
 
 Documented inline at lines 27–36. The script runs as the user; `sudo` is requested up-front and kept alive by `keep_sudo_active`. Only system-level operations (`xcode-select --install`, `sudo rm` of stock apps, FileVault, firewall, system-wide `defaults`) use `sudo`. Homebrew, `npm -g`, pyenv/tfenv, and dotfile edits must run as the user — Homebrew refuses to run under sudo.
 
-### `setup.sh` ↔ `manual-setup.md` contract
+### `setup.sh` ↔ `manual-setup.md` contract (and the corporate pair)
 
 If a step requires GUI interaction, account credentials, a recovery key the user must capture, or otherwise can't be scripted safely, it goes in `manual-setup.md` with a `**When:**` marker and explicit steps. Inside `setup.sh`, leave a comment pointing at the manual step (see the security tool blocks and the Nerd Font note in `install_prompt_and_font` for examples). The summary checklist at the bottom of `manual-setup.md` mirrors the section list — keep them in sync.
+
+The corporate variant works the same way: `corporate-setup.sh` has its own companion `corporate-manual-setup.md`, which deliberately drops the sections that don't apply on a managed device (FileVault recovery key, Find My Mac, Lulu/BlockBlock/Malwarebytes/NextDNS bootstrap, Tailscale sign-in). When changing one pair, consider whether the other needs the same change.
 
 ## Conventions
 

@@ -84,6 +84,17 @@ If [Xcode Command Line Tools](https://developer.apple.com/library/archive/techno
 
 The script requests `sudo` once at the start and keeps it alive for the duration. It then runs end-to-end without further interaction. Progress streams to the terminal and to `~/mac_setup_<timestamp>.log`.
 
+### Corporate / MDM-managed device variant
+
+`corporate-setup.sh` is a strict subset of `setup.sh` intended for a macOS device under corporate MDM. It does not use `sudo`, does not touch FileVault / firewall / `/Applications` / login window, and does not install kernel-extension-backed security tools (Lulu, BlockBlock) or a DNS proxy (NextDNS) — all of which conflict with org-managed equivalents on a managed device.
+
+Apps that are commonly MDM-pushed in corporate environments (Slack, Bitwarden, VS Code, Docker Desktop, Firefox, Alfred, etc.) are gated behind a `CONFIG` block at the top of the script. **Edit those flags before the first run** — defaults are conservative (everything off). Companion: [`corporate-manual-setup.md`](./corporate-manual-setup.md).
+
+```shell
+# Review and edit CONFIG flags first, then:
+./corporate-setup.sh
+```
+
 ## Post-installation
 
 The script does everything it safely can without human input. The remaining steps — capturing the FileVault recovery key, enabling Find My Mac, approving Lulu/BlockBlock permissions, configuring NextDNS with your profile ID, setting the Nerd Font in iTerm2, picking a Python version with `pyenv install`, signing in to Tailscale and Bitwarden — are documented step-by-step in **[`manual-setup.md`](./manual-setup.md)**, with a checklist at the end.
