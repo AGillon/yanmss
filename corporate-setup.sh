@@ -273,7 +273,14 @@ configure_user_security
 install_terminal_tools() {
   if [ "$INSTALL_ITERM2" = "true" ]; then
     echo "[$(date)] Installing iTerm2..."
-    brew_cask_install iterm2
+    # A corporate/MDM-pushed iTerm.app is not Homebrew-managed, so brew_cask_install
+    # would fall through to `brew install --cask` and abort on the existing app.
+    # Skip the install when the app is already present; preferences below still apply.
+    if [ -d "/Applications/iTerm.app" ]; then
+      echo "[$(date)] iTerm2 already present (corporate/MDM or manual), skipping install."
+    else
+      brew_cask_install iterm2
+    fi
 
     # iTerm2 preferences: Natural Text Editing keymap + profile/app-level
     # behavior tuning. Font is intentionally left untouched (user's manual
